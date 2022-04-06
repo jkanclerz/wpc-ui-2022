@@ -1,8 +1,9 @@
 
-import { S3Client, PutObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 import { awsConfiguration } from "./env";
 import {getCredentials} from './auth';
 import { uuid } from 'uuidv4';
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 
 const getAuthenticatedS3 = async () => {
@@ -43,6 +44,12 @@ export const listS3Content = async () => {
     return s3.send(command);
 }
 
-export const generatePresignedUrl = (key) => {
-    return key;
+export const generatePresignedUrl = async (key) => {
+    const s3 = await getAuthenticatedS3();
+    const getObject = new GetObjectCommand({
+        Bucket: awsConfiguration.bucket,
+        Key: key
+    });
+
+    return await getSignedUrl(s3, getObject, {expiresIn: 3600 });
 }
